@@ -10,12 +10,14 @@
 כיתבו את כל הקבצים הדרושים כך שהפקודות הבאות יעבדו ללא שגיאות:
 
 make demo && ./demo
+
 make test && ./test
 
 
 מומלץ גם להריץ:
 
 make tidy
+
 make valgrind
 
 
