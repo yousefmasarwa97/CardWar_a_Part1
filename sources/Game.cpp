@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <random>
 #include <chrono>
-//#include <std>
+#include <string>
+
 
 
 using namespace std;
@@ -23,6 +24,8 @@ namespace ariel {
       divideDeck(this->deck);
    
       rounds=0;
+      player1_wins=0;
+      player2_wins=0;
       lastTurn="";
       log="";
       first_player_log="";
@@ -43,10 +46,29 @@ namespace ariel {
       cout<<this->lastTurn<<endl;
    }
 
+   string Game::get_player_log(Player &player){
+      string result="";
+      result+=player.getPlayerName() + "{\n"
+      + "\tamout of rounds : " + to_string(rounds) + "\n"
+      + "\twins : " + to_string(player.cardesTaken()/2) + "\n"
+      + "\tamount of draws : " + to_string(this->draws) + "\n"
+      + "\tdraw rate : " + to_string((double)this->draws/rounds*100.0) + "%\n" 
+      + "\twinRates : " + to_string(player.get_winRate()) + "%\n"
+      + "\tCards [ \n" 
+      + player.get_cards_won() + "\n"
+      + "\t]\n"
+      + "}\n\n";
+      return result;
+
+   }
+
    void Game::playAll(){
       while (player1.stacksize()!=0 && player2.stacksize()!=0) {
          playTurn();
       }
+
+
+     
 
    }
 
@@ -67,9 +89,10 @@ namespace ariel {
    }
 
    void Game::printStats(){
+      first_player_log=get_player_log(player1);
       cout<<player1.getPlayerName()<<first_player_log<<endl;
+      second_player_log=get_player_log(player2);
       cout<<player2.getPlayerName()<<second_player_log<<endl;
-
    }
 
    void Game::playTurn(){
@@ -100,6 +123,7 @@ namespace ariel {
          int static result=chekwinner(card1, card2);
          while (result==0) {
             rounds+=2;
+            draws++;
             lastTurn+="DRAW."; 
             log+=lastTurn;
             Card c1=player1.playturnedcard();
@@ -114,28 +138,7 @@ namespace ariel {
             Card c22=player2.playcard();
             cards_on_table_that_belongto_player2.push_back(c22);
             
-            first_player_log+=player1.getPlayerName() + "{\n"
-            + "\tamout of rounds : " + to_string(rounds) + "\n"
-            + "\twins : " + to_string(player1.cardesTaken()) + "\n"
-            + "\tamount of draws : " + to_string(this->draws) + "\n"
-            + "\tdraw rate : " + to_string((double)this->draws/rounds*100.0) + "%\n" 
-            + "\twinRates : " + to_string(player1.cardesTaken()*100.0/rounds) + "%\n"
-            + "\tCards [ \n" 
-            + player1.get_cards_won() + "\n"
-            + "\t]\n"
-            + "}\n\n";
-
-
-            second_player_log+=player2.getPlayerName() + "{\n"
-            + "\tamout of rounds : " + to_string(rounds) + "\n"
-            + "\twins : " + to_string(player2.cardesTaken()) + "\n"
-            + "\tamount of draws : " + to_string(this->draws) + "\n"
-            + "\tdraw rate : " + to_string((double)this->draws/rounds*100.0) + "%\n" 
-            + "\twinRates : " + to_string(player2.cardesTaken()*100.0/rounds) + "%\n"
-            + "\tCards [ \n" 
-            + player2.get_cards_won() + "\n"
-            + "\t]\n"
-            + "}\n\n";
+            
 
             result=chekwinner(c11,c22);
     
@@ -171,6 +174,7 @@ namespace ariel {
           cards_on_table_that_belongto_player2.clear();
          }
       }
+      
    }
 
    int Game::chekwinner(Card card1,Card card2){
@@ -188,7 +192,6 @@ namespace ariel {
 
    vector<Card> Game::createDeck(){
       vector<Card> deck;
-      // create a standard deck of 52 cards
       for (string type:{"DIAMONDS","HEARTS","SPADES","CLUBS"}){
          for (string value:{"ACE","TWO","THREE","FOUR","FIVE","SEX","SEVEN",
             "EIGHT","NINE","TEN","JACK","QUEEN","KING"}){
@@ -204,7 +207,7 @@ namespace ariel {
       shuffle(deck.begin(), deck.end(), g);
    }
 
-   void Game::divideDeck(vector<Card> &deck/*, Player &player1, Player &player2*/){
+   void Game::divideDeck(vector<Card> &deck){
       int counter = 0;
       for (Card card : deck){
          if (counter % 2 == 0){

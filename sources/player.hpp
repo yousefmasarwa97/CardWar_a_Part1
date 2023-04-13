@@ -11,7 +11,7 @@
 
 
 
-//using namespace std;
+using namespace std;
 
 namespace ariel
 {
@@ -24,7 +24,6 @@ namespace ariel
       vector<Card> Collection_of_cards;//thecards the player have
       vector<Card> cards_won;
       int cards_gained;//the amount of cards the player won
-      int wins;//the times the player won
       double win_rate;
       bool turned;//tell us if the card is turned in case of draw or not
 
@@ -42,8 +41,6 @@ namespace ariel
       void setPlayerName(string name);
 
       int cardesTaken();//how much cards the player won
-
-      int get_wins();//how much times the player won
 
       double get_winRate();
 

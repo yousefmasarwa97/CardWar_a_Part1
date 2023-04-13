@@ -37,13 +37,12 @@ namespace ariel {
         this->cards_won.push_back(card);
     }
 
-    int Player::get_wins(){
-        return this->wins;
-    }
+
 
     double Player::get_winRate(){
-        double rate=(double)this->wins/52;
-        return rate/100;
+        int wins=cardesTaken()/2;//the amount of cards the player take from the other player is the amount of rounds he won
+        double rate=(double)wins/26;
+        return rate*100;
     }
 
 
