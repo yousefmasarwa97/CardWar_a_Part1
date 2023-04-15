@@ -16,14 +16,12 @@ using namespace ariel;
 namespace ariel {
  
    Game::Game(Player &player1,Player &player2):player1(player1),player2(player2){
-
-
-
       this->deck = createDeck();
-      shuffleDeck(this->deck);
-      divideDeck(this->deck);
+      shuffle_and_divide(this->deck);
+      
    
       rounds=0;
+      draws=0;
       player1_wins=0;
       player2_wins=0;
       lastTurn="";
@@ -31,19 +29,22 @@ namespace ariel {
       first_player_log="";
       second_player_log="";
       cards_on_table_that_belongto_player1={};
-      cards_on_table_that_belongto_player2={}; 
-      
-      
-      
-      
-      
-    
+      cards_on_table_that_belongto_player2={};  
    }
 
    
 
    void Game::printLastTurn(){
-      cout<<this->lastTurn<<endl;
+      cout<<lastTurn<<endl;
+   }
+   
+   
+   
+   void Game::printStats(){
+      first_player_log=get_player_log(player1);
+      cout<<first_player_log<<endl;
+      second_player_log=get_player_log(player2);
+      cout<<second_player_log<<endl;
    }
 
    string Game::get_player_log(Player &player){
@@ -53,11 +54,10 @@ namespace ariel {
       + "\twins : " + to_string(player.cardesTaken()/2) + "\n"
       + "\tamount of draws : " + to_string(this->draws) + "\n"
       + "\tdraw rate : " + to_string((double)this->draws/rounds*100.0) + "%\n" 
-      + "\twinRates : " + to_string(player.get_winRate()) + "%\n"
-      + "\tCards [ \n" 
-      + player.get_cards_won() + "\n"
-      + "\t]\n"
-      + "}\n\n";
+      + "\twinRates : " + to_string(player.get_winRate(player, rounds)) + "%\n"
+      + "\tCards [ " 
+      + player.get_cards_won() +
+      + "\t]\n";
       return result;
 
    }
@@ -66,21 +66,17 @@ namespace ariel {
       while (player1.stacksize()!=0 && player2.stacksize()!=0) {
          playTurn();
       }
-
-
-     
-
    }
 
    void Game::printWiner(){
       if(player1.cardesTaken()>player2.cardesTaken()){
          cout<<"the winner is: "<<player1.getPlayerName()<<endl;
       }
-      else if(player2.cardesTaken()>player1.cardesTaken()) {
-      cout<<"the winner is: "<<player2.getPlayerName()<<endl;
+      else if(player2.cardesTaken()<player1.cardesTaken()) {
+         cout<<"the winner is: "<<player2.getPlayerName()<<endl;
       }
       else {
-      cout<<"DRAW:NO WINER"<<endl;
+         cout<<"DRAW:NO WINER"<<endl;
       }
    }
 
@@ -88,12 +84,7 @@ namespace ariel {
       cout<<this->log<<endl;
    }
 
-   void Game::printStats(){
-      first_player_log=get_player_log(player1);
-      cout<<player1.getPlayerName()<<first_player_log<<endl;
-      second_player_log=get_player_log(player2);
-      cout<<player2.getPlayerName()<<second_player_log<<endl;
-   }
+  
 
    void Game::playTurn(){
       if (rounds==26) {
@@ -103,7 +94,7 @@ namespace ariel {
 
 
       if(player1.getPlayerName()==player2.getPlayerName()){
-         throw ("error: the same player are playing againts his self");
+         throw ("error: the same player are playing againts him self");
          return;
       }
 
@@ -118,39 +109,20 @@ namespace ariel {
          cards_on_table_that_belongto_player1.push_back(card1);
          Card card2=player2.playcard();
          cards_on_table_that_belongto_player2.push_back(card2);
-         lastTurn = player1.getPlayerName() + " played " + card1.get_data() + " " +card1.get_type()+" "+
-         player2.getPlayerName() + " played " + card2.get_data()+" "+card2.get_type() + ". ";
-         int static result=chekwinner(card1, card2);
-         while (result==0) {
-            rounds+=2;
-            draws++;
-            lastTurn+="DRAW."; 
+         //int static result=chekwinner(card1, card2);
+
+         if (card1.get_value()>card2.get_value()) {
+           this->lastTurn = player1.getPlayerName() + " played " + card1.get_data() + " "+
+            player2.getPlayerName() + " played " + card2.get_data()+". "
+            +player1.getPlayerName()+" "+ "WON.";
             log+=lastTurn;
-            Card c1=player1.playturnedcard();
-            cards_on_table_that_belongto_player1.push_back(c1);
+            player1_wins++;
 
-            Card c2=player2.playturnedcard();
-            cards_on_table_that_belongto_player2.push_back(c2);
-
-            Card c11=player1.playcard();
-            cards_on_table_that_belongto_player1.push_back(c11);
-
-            Card c22=player2.playcard();
-            cards_on_table_that_belongto_player2.push_back(c22);
             
-            
-
-            result=chekwinner(c11,c22);
-    
-        
-         }
-
-         if (result==1) {
-            lastTurn+=player1.getPlayerName()+" "+"WON.";
-            log+=lastTurn;
             for (Card x:cards_on_table_that_belongto_player2) {
                player1.addWonCard(x);
             }
+
             for(Card y:cards_on_table_that_belongto_player1){
                player1.addWonCard(y);
             }
@@ -160,70 +132,175 @@ namespace ariel {
             cards_on_table_that_belongto_player2.clear();
          }
 
-         else if (result==2) {
-            lastTurn+=player2.getPlayerName()+" "+"WON.";
+
+         else if (card1.get_value()<card2.get_value()) {
+            this->lastTurn = player1.getPlayerName() + " played " + card1.get_data() +" "+
+            player2.getPlayerName() + " played " + card2.get_data()+ ". "+player2.getPlayerName()+" "+ "WON.";
             log+=lastTurn;
+            player2_wins++;
+
+
             for (Card x:cards_on_table_that_belongto_player1) {
                player2.addWonCard(x);
             }
             for(Card y:cards_on_table_that_belongto_player2){
                player2.addWonCard(y);
             }
+            
               
-          cards_on_table_that_belongto_player1.clear();
-          cards_on_table_that_belongto_player2.clear();
+            cards_on_table_that_belongto_player1.clear();
+            cards_on_table_that_belongto_player2.clear();
+          
          }
+
+
+         else if (card1.get_value()==card2.get_value()) {
+            rounds+=2;
+            draws++;
+            this->lastTurn = player1.getPlayerName() + " played " + card1.get_data() + 
+            " "+player2.getPlayerName() + " played " + card2.get_data()+ ". " + "DRAW.";
+            log+=lastTurn;
+
+            bool flag=false;
+            // int static result1;
+
+            while (flag==false) {
+               if(player1.stacksize()>=2 && player2.stacksize()>=2){
+                  Card c1=player1.playturnedcard();
+                  cards_on_table_that_belongto_player1.push_back(c1);
+
+                  Card c2=player2.playturnedcard();
+                  cards_on_table_that_belongto_player2.push_back(c2);
+
+                  Card c11=player1.playcard();
+                  cards_on_table_that_belongto_player1.push_back(c11);
+
+                  Card c22=player2.playcard();
+                  cards_on_table_that_belongto_player2.push_back(c22);
+                  //result1=chekwinner(c11, c22);
+               
+                  if (c11.get_value()>c22.get_value()) {
+                     this->lastTurn = player1.getPlayerName() + " played " + card1.get_data() + " "+
+                     player2.getPlayerName() + " played " + card2.get_data()+". "
+                     +player1.getPlayerName()+" "+ "WON.";
+                     log+=lastTurn;
+                     player1_wins++;
+
+            
+                     for (Card x:cards_on_table_that_belongto_player2) {
+                        player1.addWonCard(x);
+                     }
+
+                     for(Card y:cards_on_table_that_belongto_player1){
+                        player1.addWonCard(y);
+                     }
+            
+
+                     cards_on_table_that_belongto_player1.clear();
+                     cards_on_table_that_belongto_player2.clear();
+              
+                     flag=true;
+                     break;
+                  }
+
+      
+                  else if (c11.get_value()<c22.get_value()) {
+                     this->lastTurn = player1.getPlayerName() + " played " + card1.get_data() +" "+
+                     player2.getPlayerName() + " played " + card2.get_data()+ ". "+player2.getPlayerName()+" "+ "WON.";
+                     log+=lastTurn;
+                     player2_wins++;
+
+
+                     for (Card x:cards_on_table_that_belongto_player1) {
+                        player2.addWonCard(x);
+                     }
+                     for(Card y:cards_on_table_that_belongto_player2){
+                        player2.addWonCard(y);
+                     }
+            
+              
+                     cards_on_table_that_belongto_player1.clear();
+                     cards_on_table_that_belongto_player2.clear();
+          
+                  
+                     flag=true;
+                     break;
+                  
+                  }
+
+                  else {
+                     draws++;
+                     lastTurn = player1.getPlayerName() + " played " + card1.get_data() + 
+                     " "+player2.getPlayerName() + " played " + card2.get_data()+ ". "+ "DRAW.";
+                     log+=lastTurn;
+                     flag=false;
+                  }
+               }
+
+            
+               else{
+                     if(player1.stacksize()==0){
+                   
+                        player1.addWonCard(card1);
+                        player2.addWonCard(card2);
+                        flag=true;
+                        break;
+                     }  
+                  }
+                    
+               }
+            }
+            
+         }
+         
       }
       
    }
 
    int Game::chekwinner(Card card1,Card card2){
+      int res;
       if (card1.get_value()==card2.get_value()) {
-      return 0;
+         res=0;
       }
+
       else if (card1.get_value()>card2.get_value()) {
-      return 1;
+         res=1;
       }
+
       else if (card1.get_value()<card2.get_value()){
-      return 2;
+         res=2;
       }
-      return -1;
+      return res;
    }
 
    vector<Card> Game::createDeck(){
       vector<Card> deck;
       for (string type:{"DIAMONDS","HEARTS","SPADES","CLUBS"}){
-         for (string value:{"ACE","TWO","THREE","FOUR","FIVE","SEX","SEVEN",
-            "EIGHT","NINE","TEN","JACK","QUEEN","KING"}){
-            deck.push_back(Card(type,value));
+         for(int i=1;i<=13;i++){
+            deck.push_back(Card(type,i));
          }
       }
       return deck;
    }
 
-   void Game::shuffleDeck(vector<Card> &deck){
+   void Game::shuffle_and_divide(vector<Card> &deck){
+      int counter = 0;
       random_device rd;
       mt19937 g(rd());
       shuffle(deck.begin(), deck.end(), g);
-   }
-
-   void Game::divideDeck(vector<Card> &deck){
-      int counter = 0;
+      //dividing the cards
       for (Card card : deck){
          if (counter % 2 == 0){
-            this->player1.addCardToCollection(card);
+            this->player1.add_To_Owned_Cards(card);
             counter++;
             }
          else{
-            this->player2.addCardToCollection(card);
+            this->player2.add_To_Owned_Cards(card);
             counter++;
          }
       }
-   }
-
-  
-
-
-
-
 }
+
+   
+
+
